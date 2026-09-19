@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}CRM broker · Med Assurance{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Espace broker</p>
+    <h1>Clients</h1>
+    <p class="lede">Vue centralisée des dossiers et de leur historique.</p>
+  </div>
+  <span class="badge">Données synthétiques</span>
+</div>
+
+<form method="get" action="/crm" style="margin-bottom:18px;max-width:380px">
+  <label style="margin:0">
+    <input type="search" name="q" value="{{ query }}" placeholder="Rechercher un nom ou une police…" aria-label="Rechercher un client">
+  </label>
+</form>
+
+<div class="crm">
+  <div class="card client-list">
+    {% if not clients %}<p class="empty">Aucun client trouvé.</p>{% endif %}
+    {% for c in clients %}
+    <form method="post" action="/crm/select">
+      <input type="hidden" name="client_id" value="{{ c.id }}">
+      <button type="submit" class="client-btn {{ 'is-active' if selected and c.id == selected.id }}">
+        <strong>{{ c.name }}</strong>
+        <small>{{ c.policy }} · {{ c.city }}</small>
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+
+  {% if selected %}
+  <article class="card">
+    <div class="card__head">
+      <div>
+        <p class="eyebrow">{{ selected.id }}</p>
+        <h2>{{ selected.name }}</h2>
+      </div>
+      <span class="badge">{{ selected.owner }}</span>
+    </div>
+
+    <div class="facts">
+      <div><small>Police</small><strong>{{ selected.policy }}</strong></div>
+      <div><small>Véhicule</small><strong>{{ selected.vehicle }}</strong></div>
+      <div><small>Contact masqué</small><strong>{{ selected.phone }}</strong></div>
+      <div><small>Ville</small><strong>{{ selected.city }}</strong></div>
+      <div><small>Source</small><strong>{{ selected.source }}</strong></div>
+      <div><small>Dernière activité</small><strong>{{ selected.fresh }}</strong></div>
+    </div>
+
+    <h3>Historique</h3>
+    <div class="timeline">
+      {% for h in selected.history + update.timeline %}<p>{{ h }}</p>{% endfor %}
+    </div>
+
+    <h3 style="margin-bottom:10px">Tâches</h3>
+    {% for t in selected.tasks %}
+    <form method="post" action="/crm/task">
+      <input type="hidden" name="client_id" value="{{ selected.id }}">
+      <input type="hidden" name="task_index" value="{{ loop.index0 }}">
+      <input type="hidden" name="task_text" value="{{ t }}">
+      <label class="choice">
+        <input type="checkbox" onchange="this.form.submit()" {{ 'checked' if loop.index0 in update.tasks }}>
+        {{ t }}
+      </label>
+    </form>
+    {% endfor %}
+
+    <form method="post" action="/crm/status" style="margin-top:18px">
+      <input type="hidden" name="client_id" value="{{ selected.id }}">
+      <label>
+        <span class="label-text">Statut du dossier</span>
+        <select name="status" onchange="this.form.submit()">
+          {% for s in statuses %}<option {{ 'selected' if update.status == s }}>{{ s }}</option>{% endfor %}
+        </select>
+      </label>
+    </form>
+  </article>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Répertoire Maroc · Med Assurance{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Références officielles</p>
+    <h1>Contacts et assistance</h1>
+    <p class="lede">Les numéros vérifiés des assureurs et courtiers au Maroc.</p>
+  </div>
+  <span class="badge">Vérifié 19.09.2026</span>
+</div>
+
+<div class="notice notice--info">
+  Vérifiez toujours votre contrat et la page officielle en cours. Un numéro général n'est pas un service d'urgence. Les liens ouvrent une source&nbsp;; aucun bouton ne lance d'appel.
+</div>
+
+<div class="dir-grid">
+  {% for d in entries %}
+  <article class="card">
+    <p class="eyebrow">{{ d.role }}</p>
+    <h2>{{ d.name }}</h2>
+    <p class="dir-card__phone">{{ d.phone }}</p>
+    <p class="dir-card__note">{{ d.note }}</p>
+    <a class="dir-card__link" href="{{ d.url }}" target="_blank" rel="noopener noreferrer">Ouvrir la source officielle ↗</a>
+  </article>
+  {% endfor %}
+</div>
+
+{% endblock %}

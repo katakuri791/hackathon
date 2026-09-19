@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Vue d'ensemble · Med Assurance{% endblock %}
+{% block content %}
+
+<h1 class="hello">Bonjour</h1>
+
+<div class="quick">
+  <a class="quick__btn quick__btn--primary" href="/claim">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    Déclarer
+  </a>
+  <a class="quick__btn" href="/crm">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    Clients
+  </a>
+  <a class="quick__btn" href="/agent">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Assistant
+  </a>
+  <a class="quick__btn" href="/directory">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    Assistance
+  </a>
+</div>
+
+<div class="notice notice--warn">
+  <strong>Prototype pédagogique.</strong> Les personnes, polices, sinistres et résultats sont synthétiques. Aucun appel, e-mail ou transfert externe n'est effectué.
+</div>
+
+<div class="metrics">
+  <article class="metric">
+    <div class="metric__label">Sinistres ouverts</div>
+    <div class="metric__value">{{ claims|length }}</div>
+    <div class="metric__note">fixtures locales</div>
+  </article>
+  <article class="metric">
+    <div class="metric__label">Tâches à traiter</div>
+    <div class="metric__value">{{ tasks|length }}</div>
+    <div class="metric__note">dont 2 prioritaires</div>
+  </article>
+  <article class="metric">
+    <div class="metric__label">Temps gagné</div>
+    <div class="metric__value">12 h</div>
+    <div class="metric__note">affirmation fictive à challenger</div>
+  </article>
+  <article class="metric">
+    <div class="metric__label">Satisfaction IA</div>
+    <div class="metric__value">∞</div>
+    <div class="metric__note">aucune mesure réelle</div>
+  </article>
+</div>
+
+<div class="cols" style="margin-bottom:16px">
+  <article class="card chart-card">
+    <div class="chart-card__top">
+      <div>
+        <div class="chart-card__label">Déclarations reçues</div>
+        <div class="chart-card__value">{{ chart_total }}</div>
+        <div class="chart-card__meta">
+          <span>14 derniers jours</span>
+          <span class="chart-card__delta{{ '' if chart_delta >= 0 else ' chart-card__delta--down' }}">
+            {{ '↗' if chart_delta >= 0 else '↘' }} {{ chart_delta }}&nbsp;%
+          </span>
+        </div>
+      </div>
+      <span class="badge">Fixtures</span>
+    </div>
+
+    <div class="chart">
+      <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img"
+           aria-label="Déclarations reçues sur 14 jours : tendance à la hausse, de 4 à 11 par jour.">
+        <defs>
+          <linearGradient id="chartFade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#145fe4" stop-opacity="0.16"/>
+            <stop offset="100%" stop-color="#145fe4" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line class="chart__grid" x1="0" y1="{{ chart.height - 26 }}" x2="{{ chart.width }}" y2="{{ chart.height - 26 }}"/>
+        <path class="chart__area" d="{{ chart.area }}"/>
+        <path class="chart__line" d="{{ chart.line }}"/>
+        <circle class="chart__dot" cx="{{ chart.points[-1][0] }}" cy="{{ chart.points[-1][1] }}" r="4.5"/>
+      </svg>
+      <div class="chart__axis">
+        {% for l in chart_labels %}<span>{{ l }}</span>{% endfor %}
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="card__head"><h2>Répartition</h2></div>
+    <div class="row">
+      <div><strong>Casablanca</strong><span class="row__sub">Collision légère</span></div>
+      <span class="badge badge--warn">Pièce manquante</span>
+    </div>
+    <div class="row">
+      <div><strong>Rabat</strong><span class="row__sub">Véhicule immobilisé</span></div>
+      <span class="badge badge--blue">Assistance</span>
+    </div>
+    <div class="row">
+      <div><strong>Marrakech</strong><span class="row__sub">Accident avec blessure</span></div>
+      <span class="badge badge--danger">Escalade</span>
+    </div>
+    <div class="row">
+      <div><strong>WOW Score</strong><span class="row__sub">Valeur décorative sans base mesurée</span></div>
+      <span class="badge badge--blue">98&nbsp;%</span>
+    </div>
+  </article>
+</div>
+
+<div class="cols">
+  <article class="card">
+    <div class="card__head">
+      <h2>Files de sinistres</h2>
+      <a class="btn btn--ghost" href="/claim">Nouveau</a>
+    </div>
+    {% for c in claims %}
+    <div class="row">
+      <div>
+        <strong>{{ c.title }}</strong>
+        <span class="row__sub">{{ c.id }} · {{ c.client }} · {{ c.date }}</span>
+      </div>
+      <span class="badge {{ 'badge--danger' if c.tone == 'danger' else 'badge--warn' if c.tone == 'warning' else 'badge--blue' }}">{{ c.status }}</span>
+    </div>
+    {% endfor %}
+  </article>
+
+  <article class="card">
+    <div class="card__head"><h2>Prochaines tâches</h2></div>
+    {% for t in tasks %}
+    <div class="row">
+      <div>
+        <strong>{{ t.text }}</strong>
+        <span class="row__sub">{{ t.client }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </article>
+</div>
+
+<form method="post" action="/reset" style="margin-top:28px" onsubmit="return confirm('Effacer le brouillon et toutes les actions locales de la démo ?')">
+  <button class="btn btn--quiet" type="submit" style="padding-left:0">Réinitialiser la démo</button>
+</form>
+
+{% endblock %}

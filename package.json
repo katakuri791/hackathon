@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "python3 server.py",
+    "dev:fastapi": "uv run uvicorn main:app --reload --port 8000",
     "test": "node scripts/smoke.mjs"
   }
 }

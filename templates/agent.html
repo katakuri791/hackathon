@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Assistant · Med Assurance{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Assistant</h1>
+    <p class="lede">Posez une question sur un dossier, un client ou les contacts d'assistance.</p>
+  </div>
+</div>
+
+{% if error %}
+<div class="notice notice--danger">{{ error }}</div>
+{% endif %}
+
+<div class="chat-layout">
+  <aside class="chat-side" aria-label="Conversations">
+    <a class="chat-side__new" href="/agent/new">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Nouvelle discussion
+    </a>
+
+    <div class="chat-side__list">
+      {% if not conversations %}
+      <p class="chat-side__empty">Aucune conversation enregistrée.</p>
+      {% endif %}
+      {% for c in conversations %}
+      <div class="chat-side__item">
+        <a class="chat-side__link {{ 'is-active' if current and c.id == current.id }}" href="/agent?chat={{ c.id }}">
+          {{ c.title }}
+          <span class="chat-side__date">{{ c.created[8:10] }}/{{ c.created[5:7] }}</span>
+        </a>
+        <form method="post" action="/agent/delete" onsubmit="return confirm('Supprimer cette conversation ?')">
+          <input type="hidden" name="chat_id" value="{{ c.id }}">
+          <button class="chat-side__del" type="submit" aria-label="Supprimer « {{ c.title }} »">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <div class="chat">
+    <div class="chat__log" id="log">
+      {% if not history %}
+      <div class="chat__empty">
+        <p style="font-weight:500;color:var(--ink);margin-bottom:6px">Comment puis-je vous aider&nbsp;?</p>
+        <p style="font-size:14px">Je consulte les dossiers, les clients et les contacts d'assistance.</p>
+        <div class="chat__suggestions">
+          {% for s in suggestions %}
+          <button class="chat__suggestion" type="button" data-fill="{{ s }}">{{ s }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% for m in history %}
+      {% if m.role == 'user' %}
+      <div class="msg-row msg-row--user"><div class="msg msg--user">{{ m.content }}</div></div>
+      {% else %}
+      <div class="msg-row">
+        <span class="msg-avatar" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></svg>
+        </span>
+        <div class="msg msg--bot">{{ m.content }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+
+      <div class="msg-row" id="typing" hidden aria-live="polite">
+        <span class="msg-avatar" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></svg>
+        </span>
+        <div class="msg msg--bot typing">
+          <span class="typing__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          L'assistant consulte les dossiers…
+        </div>
+      </div>
+    </div>
+
+    <form class="chat__form" method="post" action="/agent/send" id="chatForm">
+      {% if current %}<input type="hidden" name="chat_id" value="{{ current.id }}">{% endif %}
+      <input type="text" name="message" placeholder="Votre question…" autocomplete="off" required autofocus aria-label="Votre message" id="chatInput">
+      <button class="btn btn--primary" type="submit" id="chatSend">Envoyer</button>
+    </form>
+  </div>
+</div>
+
+<p class="lede" style="font-size:13px;margin-top:14px">
+  L'assistant consulte des données fictives et ne décide jamais d'une garantie, d'une responsabilité ou d'une indemnisation.
+</p>
+
+<script>
+  (function () {
+    const log = document.getElementById('log');
+    if (log) log.scrollTop = log.scrollHeight;
+
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('chatInput');
+    const send = document.getElementById('chatSend');
+    const typing = document.getElementById('typing');
+
+    // Les suggestions remplissent le champ plutôt que d'envoyer directement :
+    // l'utilisateur peut encore reformuler avant d'envoyer.
+    document.querySelectorAll('[data-fill]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        input.value = btn.dataset.fill;
+        input.focus();
+      });
+    });
+
+    if (!form || !input || !typing) return;
+
+    // La réponse prend plusieurs secondes (appels réseau au modèle) : on affiche
+    // la question tout de suite, sinon la page paraît figée.
+    form.addEventListener('submit', function () {
+      const text = input.value.trim();
+      if (!text) return;
+
+      const empty = log.querySelector('.chat__empty');
+      if (empty) empty.remove();
+
+      const row = document.createElement('div');
+      row.className = 'msg-row msg-row--user';
+      const bubble = document.createElement('div');
+      bubble.className = 'msg msg--user';
+      bubble.textContent = text;
+      row.appendChild(bubble);
+      log.insertBefore(row, typing);
+
+      typing.hidden = false;
+      input.disabled = true;
+      send.disabled = true;
+      send.textContent = 'Envoi…';
+      log.scrollTop = log.scrollHeight;
+    });
+  })();
+</script>
+
+{% endblock %}

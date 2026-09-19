@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Déclarer un accident · Med Assurance{% endblock %}
+{% block content %}
+
+{% set titles = {
+  1: ("Tout le monde est-il en sécurité ?", "Répondez d'abord à cette question. Le reste peut attendre."),
+  2: ("Que s'est-il passé ?", "Décrivez les faits, sans conclure sur la responsabilité."),
+  3: ("Vos documents", "Aucun fichier n'est envoyé. Seuls les noms sont conservés localement."),
+  4: ("Vérifiez avant d'envoyer", "Relisez votre déclaration. Vous pouvez encore revenir en arrière.")
+} %}
+
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Parcours conducteur</p>
+    <h1>Déclarer un accident</h1>
+  </div>
+  <span class="badge">Étape {{ step }} sur 4</span>
+</div>
+
+{% if draft.injury in ('yes', 'unknown') %}
+<div class="notice notice--danger">
+  <strong>Quelqu'un est blessé ou en danger.</strong> Appelez les secours avant toute démarche. Un procès-verbal peut être nécessaire. Cette démo ne contacte aucun service. Source&nbsp;: guide conducteur ACAPS.
+</div>
+{% endif %}
+
+<div class="stepper">
+  <div class="stepper__track" role="list" aria-label="Progression">
+    {% for i in [1, 2, 3, 4] %}
+    <div class="stepper__dot {{ 'is-active' if i == step }}{{ 'is-done' if i < step }}" role="listitem" {% if i == step %}aria-current="step"{% endif %}>
+      {% if i < step %}✓{% else %}{{ i }}{% endif %}
+    </div>
+    {% if not loop.last %}<div class="stepper__bar {{ 'is-filled' if i < step }}"><span></span></div>{% endif %}
+    {% endfor %}
+  </div>
+
+  <form class="stepper__panel" method="post" action="{{ '/claim/submit' if step == 4 else '/claim/draft?step=' ~ step }}">
+    <div class="stepper__title">{{ titles[step][0] }}</div>
+    <p class="stepper__hint">{{ titles[step][1] }}</p>
+
+    {% if step == 1 %}
+      <label class="choice"><input type="radio" name="injury" value="no" {{ 'checked' if draft.injury == 'no' }} required> Personne n'est blessé</label>
+      <label class="choice"><input type="radio" name="injury" value="yes" {{ 'checked' if draft.injury == 'yes' }}> Quelqu'un est blessé ou en danger</label>
+      <label class="choice"><input type="radio" name="injury" value="unknown" {{ 'checked' if draft.injury == 'unknown' }}> Je ne sais pas encore</label>
+    {% endif %}
+
+    {% if step == 2 %}
+      <div class="grid-2">
+        <label><span class="label-text">Nom du conducteur</span>
+          <input type="text" name="claimant" value="{{ draft.claimant or '' }}" placeholder="Ex. Amine Alaoui" required></label>
+        <label><span class="label-text">Police d'assurance <span style="font-weight:400;color:var(--ink-soft)">(facultatif)</span></span>
+          <input type="text" name="policy" value="{{ draft.policy or '' }}" placeholder="Ex. MA-AUTO-25001"></label>
+        <label><span class="label-text">Type de sinistre</span>
+          <select name="type" required>
+            <option value="">Choisir…</option>
+            {% for t in types %}<option {{ 'selected' if draft.type == t }}>{{ t }}</option>{% endfor %}
+          </select></label>
+        <label><span class="label-text">Date et heure</span>
+          <input type="datetime-local" name="date" value="{{ draft.date or '' }}" required></label>
+        <label><span class="label-text">Ville</span>
+          <select name="city" required>
+            <option value="">Choisir…</option>
+            {% for c in cities %}<option {{ 'selected' if draft.city == c }}>{{ c }}</option>{% endfor %}
+          </select></label>
+        <label class="wide"><span class="label-text">Que s'est-il passé ?</span>
+          <textarea name="description" rows="5" placeholder="Ex. Je sortais du rond-point quand un véhicule m'a heurté à l'arrière." required>{{ draft.description or '' }}</textarea></label>
+      </div>
+      <input type="hidden" name="injury" value="{{ draft.injury or '' }}">
+    {% endif %}
+
+    {% if step == 3 %}
+      {% for d in docs %}
+      <div class="grid-2">
+        <label><span class="label-text">Nom du fichier</span>
+          <input type="text" name="doc_name" value="{{ d.name }}" placeholder="photo-avant.jpg"></label>
+        <label><span class="label-text">Type</span>
+          <select name="doc_type">
+            {% for t in doc_types %}<option {{ 'selected' if d.type == t }}>{{ t }}</option>{% endfor %}
+          </select></label>
+      </div>
+      {% endfor %}
+      {% for f in ['injury', 'claimant', 'policy', 'type', 'date', 'city', 'description'] %}
+      <input type="hidden" name="{{ f }}" value="{{ draft[f] or '' }}">
+      {% endfor %}
+      <button class="btn btn--ghost" type="submit" formaction="/claim/add-doc" formnovalidate>+ Ajouter un document</button>
+    {% endif %}
+
+    {% if step == 4 %}
+      <div class="facts">
+        <div><small>Sécurité</small><strong>{{ {'no': 'Personne blessé', 'yes': 'Blessé', 'unknown': 'Incertain'}.get(draft.injury, 'Non répondu') }}</strong></div>
+        <div><small>Type</small><strong>{{ draft.type or 'Non renseigné' }}</strong></div>
+        <div><small>Ville</small><strong>{{ draft.city or 'Non renseignée' }}</strong></div>
+        <div><small>Conducteur</small><strong>{{ draft.claimant or 'Non renseigné' }}</strong></div>
+      </div>
+      <p style="font-size:14px;color:var(--ink-soft);margin-bottom:6px">Description</p>
+      <p style="margin-bottom:20px">{{ draft.description or 'Non renseignée' }}</p>
+      {% if draft.documents %}
+      <p style="font-size:14px;color:var(--ink-soft);margin-bottom:6px">Documents</p>
+      <p style="margin-bottom:20px">{% for d in draft.documents %}{{ d.name }} ({{ d.type }}){% if not loop.last %} · {% endif %}{% endfor %}</p>
+      {% endif %}
+
+      <label class="choice"><input type="checkbox" name="accuracy" value="1" required> Je confirme que ces informations peuvent être transmises au courtier dans cette simulation.</label>
+
+      <div class="notice notice--info" style="margin-top:16px">
+        L'assureur détermine la garantie, la responsabilité et l'éventuelle expertise. Une expertise ne garantit pas une indemnisation. Source&nbsp;: guide ACAPS sur les dégâts matériels.
+      </div>
+      {% for f in ['injury', 'claimant', 'policy', 'type', 'date', 'city', 'description'] %}
+      <input type="hidden" name="{{ f }}" value="{{ draft[f] or '' }}">
+      {% endfor %}
+    {% endif %}
+
+    <div class="stepper__actions">
+      {% if step > 1 %}
+      <button class="btn btn--ghost" type="submit" formaction="/claim/draft?step={{ step - 1 }}" formnovalidate>Précédent</button>
+      {% endif %}
+      <button class="btn btn--quiet" type="submit" formaction="/claim/draft?step={{ step }}" formnovalidate>Enregistrer le brouillon</button>
+      <span class="spacer"></span>
+      {% if step < 4 %}
+      <button class="btn btn--primary" type="submit" formaction="/claim/draft?step={{ step + 1 }}">Suivant</button>
+      {% else %}
+      <button class="btn btn--primary" type="submit">Envoyer la déclaration</button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+{% if submitted %}
+<article class="card" style="margin-top:20px">
+  <div class="card__head">
+    <h2>{{ submitted.id }}</h2>
+    <span class="badge badge--blue">Reçu dans la démo</span>
+  </div>
+  <div class="timeline">
+    <p><strong style="color:var(--ink)">Enregistré localement</strong> — déclaration ajoutée au suivi et à la file du courtier</p>
+    <p><strong style="color:var(--ink)">Étape suivante</strong> — revue par un courtier humain</p>
+    <p><strong style="color:var(--ink)">Non effectué</strong> — aucun envoi externe, aucune décision de garantie</p>
+  </div>
+</article>
+{% endif %}
+
+{% endblock %}

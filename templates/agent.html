@@ -114,9 +114,12 @@
 
     // La réponse prend plusieurs secondes (appels réseau au modèle) : on affiche
     // la question tout de suite, sinon la page paraît figée.
-    form.addEventListener('submit', function () {
+    let sending = false;
+    form.addEventListener('submit', function (e) {
+      if (sending) { e.preventDefault(); return; }
       const text = input.value.trim();
       if (!text) return;
+      sending = true;
 
       const empty = log.querySelector('.chat__empty');
       if (empty) empty.remove();
@@ -130,9 +133,11 @@
       log.insertBefore(row, typing);
 
       typing.hidden = false;
-      input.disabled = true;
-      send.disabled = true;
+      // readOnly, jamais disabled : un champ désactivé n'est pas envoyé au
+      // serveur, et la requête partirait sans le message.
+      input.readOnly = true;
       send.textContent = 'Envoi…';
+      send.classList.add('is-busy');
       log.scrollTop = log.scrollHeight;
     });
   })();

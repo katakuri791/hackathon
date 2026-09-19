@@ -1,0 +1,9 @@
+{
+  "name": "med-assurance-motor-starter",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "python3 server.py",
+    "test": "node scripts/smoke.mjs"
+  }
+}

@@ -1,0 +1,9 @@
+# Optional bonus: browser-agent account import
+
+Extend the local import simulation with a visible browser workflow against a real Moroccan broker. The goal is for a computer-use agent to register and sign in to an ordinary test or owner-authorised account through the public website, then centralise permitted account information without an API. TRT Broker and OuiAssur have verified public login and registration entry points; this does not establish an integration or affiliation with Med Assurance. No real account has been created for this starter.
+
+The computer-use agent may complete ordinary registration and login after explicit authorisation for the named site and account. A human handles OTP, CAPTCHA, consent and credential steps when required by the chosen tool's policy or when the page is ambiguous. The agent may then read the minimum visible policy, contract, document or claim-list fields needed for the demonstration. Record the page URL, retrieval time and field-level provenance. Present a mapping preview, skip exact duplicates, show conflicts side by side, and require the user to approve any local merge.
+
+Stop on failed login, an unexpected page, ambiguous identity, missing permission, or an unsupported field. Do not store credentials or sensitive recordings. Do not use hidden/private APIs, bypass access controls, purchase insurance, accept a quote, change an insurance contract, contact a provider or submit a real claim. Account registration and login are the only external writes in scope and require the explicit authorisation above. A local fixture proves only the mock mechanics; label it accordingly.
+
+Evidence for the bonus consists of the authorised account scope, visible browser steps, source and time, mapping preview, duplicate/conflict/interruption behavior and proof that no external write occurred beyond the authorised registration/login. State whether signup and login completed or the exact stage where the workflow stopped.

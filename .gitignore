@@ -1,9 +1,31 @@
+# Secrets et état local
 .env
-node_modules/
+.demo-state.json
+
+# Python
 __pycache__/
 *.pyc
 .venv/
-dist/
-*.md
-.demo-state.json
 uv.lock
+
+# Node (le projet est 100 % Python, plus rien ne doit en venir)
+node_modules/
+package.json
+package-lock.json
+dist/
+
+# Ancien front vanilla, remplacé par main.py + templates/ + static/app.css
+index.html
+app.js
+data.js
+styles.css
+server.py
+scripts/
+SHA256SUMS.txt
+
+# Images de travail non intégrées aux pages
+static/images*
+Gemini_Generated_Image*
+
+# Documentation et notes de travail
+*.md
